@@ -2,9 +2,10 @@
 Используемые библиотеки
 '''
 import sys
+import re
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QPushButton, QSpinBox, QLabel, 
                              QMessageBox, QMainWindow, QComboBox,QProgressDialog, QDialog, QLineEdit, QHBoxLayout)
-from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon
+from PyQt5.QtGui import QDoubleValidator, QPixmap, QIcon, QFont
 from PyQt5.QtCore import Qt, QTimer
 import math
 from mpmath import *
@@ -39,7 +40,7 @@ class MyApp(QWidget):
         self.layout.addWidget(self.image_label)
         self.setStyleSheet("""
             QPushButton {
-                background-color: #134A71;
+                background-color: #2F4F4F;
                 color: white;
                 border-radius: 10px;
                 padding: 15px;
@@ -48,19 +49,12 @@ class MyApp(QWidget):
 
         self.setLayout(layout)
         self.setWindowTitle('Генератор паролей')
-        self.setGeometry(100, 100, 700, 700)
+        self.setGeometry(100, 100, 1000, 600)
 
         self.setWindowIcon(QIcon(r"password.png"))
 
-        self.generate_button_with_square_sqrt = QPushButton('Сгенерировать пароли вычислением квадратного корня числа')
-        self.generate_button_with_square_sqrt.clicked.connect(self.generate_passwords_with_square_sqrt)
-
-        self.spin_box = QSpinBox(self)
-        self.spin_box.setRange(1, 999999)  # Установка диапазона значений
-        self.spin_box.setValue(1000)  # Значение по умолчанию
-
-        self.generate_button_with_cubic_sqrt = QPushButton('Сгенерировать пароли вычислением кубического корня числа')
-        self.generate_button_with_cubic_sqrt.clicked.connect(self.generate_passwords_with_cubic_sqrt)
+        self.generate_button_with_root = QPushButton('Сгенерировать пароли вычислением корня')
+        self.generate_button_with_root.clicked.connect(self.select_root)
 
         self.generate_button_with_math_const = QPushButton('Сгенерировать пароли из известных математических констант')
         self.generate_button_with_math_const.clicked.connect(self.generate_passwords_with_math_const)
@@ -76,50 +70,144 @@ class MyApp(QWidget):
 
         self.generate_button_with_rec_relations = QPushButton('Сгенерировать пароли из рекуррентных соотношений')
         self.generate_button_with_rec_relations.clicked.connect(self.select_recurrent_relation)
+
         label1 = QLabel('Выберите какие константы записать:')
+        font = QFont('Verdana', 10)  # Устанавливаем шрифт Times New Roman, размер 20, полужирный
+        font2 = QFont('Verdana', 8)
+                
         layout.addWidget(label1)
         layout.addWidget(self.generate_button_with_math_const)
         layout.addWidget(self.generate_button_with_physical_const)
         layout.addWidget(self.generate_button_with_chemical_const)
         layout.addWidget(self.generate_button_with_table_bradis)
 
-        label2 = QLabel('Введите количество паролей, которые необходимо сгенерировать:')
-        layout.addWidget(label2)
-        layout.addWidget(self.spin_box)
-        label2 = QLabel('Выберите каким способом сгенерировать пароли:')
-        layout.addWidget(label2)
-        layout.addWidget(self.generate_button_with_square_sqrt)
-        layout.addWidget(self.generate_button_with_cubic_sqrt)
+        label = QLabel('Выберите каким способом сгенерировать пароли:')
+        label.setFont(font)
+        label1.setFont(font)
+        self.generate_button_with_root.setFont(font2)
+        self.generate_button_with_math_const.setFont(font2)
+        self.generate_button_with_physical_const.setFont(font2)
+        self.generate_button_with_chemical_const.setFont(font2)
+        self.generate_button_with_table_bradis.setFont(font2)
+        self.generate_button_with_rec_relations.setFont(font2)
+        layout.addWidget(label)
+        layout.addWidget(self.generate_button_with_root)
         layout.addWidget(self.generate_button_with_rec_relations)
 
 
+    def select_root(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Выбор корня')
+        layout = QVBoxLayout()
+
+
+        combo_box = QComboBox(dialog)
+        combo_box.addItem('Квадратный корень')
+        combo_box.addItem('Кубический корень')
+
+
+        select_button = QPushButton("Выбрать", dialog)
+        select_button.clicked.connect(lambda: self.generate_passwords_with_root(combo_box.currentText(), dialog))
+
+        layout.addWidget(QLabel('Выберите корень:'))
+        layout.addWidget(combo_box)
+        layout.addWidget(select_button)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
+
+    def generate_passwords_with_root(self, relation, dialog):
+        if relation == 'Квадратный корень':
+            dialog.accept()
+            self.setup_parametres_for_square_rt()
+        elif relation == 'Кубический корень':
+            dialog.accept()
+            self.setup_parametres_for_cubic_rt()
+
+
     # Генерация паролей на основе вычисления квадратного корня
-    def generate_passwords_with_square_sqrt(self):
-        count = self.spin_box.value()
-        if count >= 1:
+    def generate_passwords_with_square_rt(self):
+        min_value = self.min_value_spinbox.value()
+        max_value = self.max_value_spinbox.value()
+        if min_value >= 1:
             with open('square_root_passwords.txt', 'w') as file:
-                file.write(f'Вычисление квадратного корня от номера пароля.')
-                for i in range(1, count+1):
-                    # result = "{:.62f}".format(math.sqrt(i))
-                    result = math.sqrt(i)
+                file.write(f'Вычисление квадратного корня от номера пароля.\n\n\n')
+                for i in range(min_value, max_value+1):
+                    result = "{:.62f}".format(math.sqrt(i))
+                    # result = math.sqrt(i)
                     if result!= 'Нельзя извлечь корень':
-                        file.write(f'Квадратный корень {i}: {result}\n')
+                        file.write(f'{i};{result}\n')
             QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
+            self.param_dialog.accept()
 
 
 
     # Генерация паролей на основе вычисления кубического корня
-    def generate_passwords_with_cubic_sqrt(self):
-        count = self.spin_box.value()
-        if count >= 1:
+    def generate_passwords_with_cubic_rt(self):
+        min_value = self.min_value_spinbox.value()
+        max_value = self.max_value_spinbox.value()
+        if min_value >= 1:
             with open('cubic_root_passwords.txt', 'w') as file:
-                file.write(f'Вычисление кубического корня от номера пароля.')
-                for i in range(1, count+1):
-                    # result = "{:.62f}".format(pow(i, 1/3))
-                    result = pow(i, 1/3)
-                    file.write(f'Кубический корень {i}: {result}\n')
+                file.write(f'Вычисление кубического корня от номера пароля.\n\n\n')
+                for i in range(min_value, max_value+1):
+                    result = "{:.62f}".format(pow(i, 1/3))
+                    # result = pow(i, 1/3)
+                    file.write(f'{i};{result}\n')
             QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
+            self.param_dialog.accept()
 
+
+    def setup_parametres_for_square_rt(self):
+        self.param_dialog = QDialog(self)
+        self.param_dialog.setWindowTitle('Параметры паролей квадратного корня')
+
+        layout = QHBoxLayout()
+
+        self.min_value_spinbox = QSpinBox(self.param_dialog)
+        self.min_value_spinbox.setRange(1, 9999)
+        self.min_value_spinbox.setValue(1)
+
+        self.max_value_spinbox = QSpinBox(self.param_dialog)
+        self.max_value_spinbox.setRange(1, 999)
+        self.max_value_spinbox.setValue(1)
+
+        generate_button = QPushButton('Генерировать пароли', self.param_dialog)
+        generate_button.clicked.connect(self.generate_passwords_with_square_rt)
+
+        layout.addWidget(QLabel('Минимальная длина пароля:'))
+        layout.addWidget(self.min_value_spinbox)
+        layout.addWidget(QLabel('Максимальная длина пароля:'))
+        layout.addWidget(self.max_value_spinbox)
+        layout.addWidget(generate_button)
+
+        self.param_dialog.setLayout(layout)
+        self.param_dialog.exec_()
+
+    def setup_parametres_for_cubic_rt(self):
+        self.param_dialog = QDialog(self)
+        self.param_dialog.setWindowTitle('Параметры паролей кубического корня')
+
+        layout = QHBoxLayout()
+
+        self.min_value_spinbox = QSpinBox(self.param_dialog)
+        self.min_value_spinbox.setRange(1, 9999)
+        self.min_value_spinbox.setValue(1)
+
+        self.max_value_spinbox = QSpinBox(self.param_dialog)
+        self.max_value_spinbox.setRange(1, 999)
+        self.max_value_spinbox.setValue(1)
+
+        generate_button = QPushButton('Генерировать пароли', self.param_dialog)
+        generate_button.clicked.connect(self.generate_passwords_with_cubic_rt)
+
+        layout.addWidget(QLabel('Минимальная длина пароля:'))
+        layout.addWidget(self.min_value_spinbox)
+        layout.addWidget(QLabel('Максимальная длина пароля:'))
+        layout.addWidget(self.max_value_spinbox)
+        layout.addWidget(generate_button)
+
+        self.param_dialog.setLayout(layout)
+        self.param_dialog.exec_()
 
     # Генерация паролей на основе математических констант
     def generate_passwords_with_math_const(self):
@@ -707,7 +795,6 @@ class MyApp(QWidget):
         QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')
 
     
-
     def generate_passwords_with_recurrent_relation(self, relation, dialog):
         if relation == 'Последовательность Фибоначчи':
             dialog.accept()
@@ -718,12 +805,46 @@ class MyApp(QWidget):
         elif relation == 'Геометрическая прогрессия':
             dialog.accept()
             self.setup_geometric_progression_parameters()
-        elif relation == 'Последовательность с добавлением константы':
-            dialog.accept()
-            self.setup_for_constant_parameters()
+        # elif relation == 'Последовательность с добавлением константы':
+        #     dialog.accept()
+        #     self.setup_for_constant_parameters()
         elif relation == 'Числа Каталана':
             dialog.accept()
             self.setup_catalan_number_parametres()
+
+
+    def setup_fibonacci_parameters(self):
+    
+        self.param_dialog = QDialog(self)
+        self.param_dialog.setWindowTitle('Параметры для последовательности Фибоначчи')
+
+        layout = QVBoxLayout()
+
+        self.count_passwords = QSpinBox(self.param_dialog)
+        self.count_passwords.setRange(1, 9999)
+        self.count_passwords.setValue(1)
+
+        self.min_length_spinbox = QSpinBox(self.param_dialog)
+        self.min_length_spinbox.setRange(1, 9999)
+        self.min_length_spinbox.setValue(1)
+
+        self.max_length_spinbox = QSpinBox(self.param_dialog)
+        self.max_length_spinbox.setRange(1, 9999)
+        self.max_length_spinbox.setValue(1)
+
+        generate_button = QPushButton('Генерировать пароли', self.param_dialog)
+        generate_button.clicked.connect(self.generate_passwords_with_fibonacci)
+
+        layout.addWidget(QLabel('Минимальная длина последовательности'))
+        layout.addWidget(self.min_length_spinbox)
+        layout.addWidget(QLabel('Максимальная длина последовательности'))
+        layout.addWidget(self.max_length_spinbox)
+        layout.addWidget(QLabel('Количество паролей с заданными параметрами:'))
+        layout.addWidget(self.count_passwords)
+        layout.addWidget(generate_button)
+
+        self.param_dialog.setLayout(layout)
+        self.param_dialog.exec_()
 
 
     def setup_arithmetic_progression_parameters(self):
@@ -731,6 +852,10 @@ class MyApp(QWidget):
         self.param_dialog.setWindowTitle('Параметры арифметической прогрессии')
 
         layout = QVBoxLayout()
+
+        self.count_passwords = QSpinBox(self.param_dialog)
+        self.count_passwords.setRange(1, 9999)
+        self.count_passwords.setValue(1)
 
         self.first_member_input = QLineEdit(self.param_dialog)
         self.first_member_input.setPlaceholderText('Первый член')
@@ -757,6 +882,8 @@ class MyApp(QWidget):
         layout.addWidget(self.min_length_spinbox)
         layout.addWidget(QLabel('Максимальная длина пароля:'))
         layout.addWidget(self.max_length_spinbox)
+        layout.addWidget(QLabel('Количество паролей с заданными параметрами:'))
+        layout.addWidget(self.count_passwords)
         layout.addWidget(generate_button)
 
         self.param_dialog.setLayout(layout)
@@ -768,6 +895,10 @@ class MyApp(QWidget):
         self.param_dialog.setWindowTitle('Параметры геометрической прогрессии')
 
         layout = QVBoxLayout()
+
+        self.count_passwords = QSpinBox(self.param_dialog)
+        self.count_passwords.setRange(1, 9999)
+        self.count_passwords.setValue(1)
 
         self.start_input = QLineEdit(self.param_dialog)
         self.start_input.setPlaceholderText('Первый член')
@@ -794,33 +925,8 @@ class MyApp(QWidget):
         layout.addWidget(self.min_length_spinbox)
         layout.addWidget(QLabel('Максимальная длина пароля:'))
         layout.addWidget(self.max_length_spinbox)
-        layout.addWidget(generate_button)
-
-        self.param_dialog.setLayout(layout)
-        self.param_dialog.exec_()
-
-
-    def setup_fibonacci_parameters(self):
-        self.param_dialog = QDialog(self)
-        self.param_dialog.setWindowTitle('Параметры для последовательности Фибоначчи')
-
-        layout = QVBoxLayout()
-
-        self.min_length_spinbox = QSpinBox(self.param_dialog)
-        self.min_length_spinbox.setRange(1, 9999)
-        self.min_length_spinbox.setValue(1)
-
-        self.max_length_spinbox = QSpinBox(self.param_dialog)
-        self.max_length_spinbox.setRange(1, 9999)
-        self.max_length_spinbox.setValue(1)
-
-        generate_button = QPushButton('Генерировать пароли', self.param_dialog)
-        generate_button.clicked.connect(self.generate_passwords_with_fibonacci)
-
-        layout.addWidget(QLabel('Минимальная длина последовательности'))
-        layout.addWidget(self.min_length_spinbox)
-        layout.addWidget(QLabel('Максимальная длина последовательности'))
-        layout.addWidget(self.max_length_spinbox)
+        layout.addWidget(QLabel('Количество паролей с заданными параметрами:'))
+        layout.addWidget(self.count_passwords)
         layout.addWidget(generate_button)
 
         self.param_dialog.setLayout(layout)
@@ -832,12 +938,17 @@ class MyApp(QWidget):
         self.param_dialog.setWindowTitle('Параметры для последовательности Фибоначчи')
         layout = QVBoxLayout()
 
+        self.count_passwords = QSpinBox(self.param_dialog)
+        self.count_passwords.setRange(1, 999)
+        self.count_passwords.setValue(1)
+
         self.first_number_input = QLineEdit(self.param_dialog)
         self.first_number_input.setPlaceholderText('Первый член')
 
 
-        self.const_value_input = QLineEdit(self.param_dialog)
-        self.const_value_input.setPlaceholderText('Значение константы')
+        self.const_value_input = QSpinBox(self.param_dialog)
+        self.const_value_input.setRange(1,100)
+        self.const_value_input.setValue(1)
 
         self.min_length_spinbox = QSpinBox(self.param_dialog)
         self.min_length_spinbox.setRange(1, 999)
@@ -858,6 +969,8 @@ class MyApp(QWidget):
         layout.addWidget(self.min_length_spinbox)
         layout.addWidget(QLabel('Максимальная длина пароля:'))
         layout.addWidget(self.max_length_spinbox)
+        layout.addWidget(QLabel('Количество паролей с заданными параметрами'))
+        layout.addWidget(self.count_passwords)
         layout.addWidget(generate_button)
 
         self.param_dialog.setLayout(layout)
@@ -869,6 +982,10 @@ class MyApp(QWidget):
         self.param_dialog.setWindowTitle('Параметры для чисел Каталана')
 
         layout = QVBoxLayout()
+
+        self.count_passwords = QSpinBox(self.param_dialog)
+        self.count_passwords.setRange(1,999)
+        self.count_passwords.setValue(1)
 
         self.min_length_spinbox = QSpinBox(self.param_dialog)
         self.min_length_spinbox.setRange(1, 999)
@@ -885,6 +1002,8 @@ class MyApp(QWidget):
         layout.addWidget(self.min_length_spinbox)
         layout.addWidget(QLabel('Максимальная длина пароля'))
         layout.addWidget(self.max_length_spinbox)
+        layout.addWidget(QLabel('Количество паролей с заданными параметрами:'))
+        layout.addWidget(self.count_passwords)
         layout.addWidget(generate_button)
 
         self.param_dialog.setLayout(layout)
@@ -900,7 +1019,7 @@ class MyApp(QWidget):
         combo_box.addItem('Последовательность Фибоначчи')
         combo_box.addItem('Арифметическая прогрессия')
         combo_box.addItem('Геометрическая прогрессия')
-        combo_box.addItem('Последовательность с добавлением константы')
+        # combo_box.addItem('Последовательность с добавлением константы')
         combo_box.addItem('Числа Каталана')
 
         select_button = QPushButton("Выбрать", dialog)
@@ -914,7 +1033,6 @@ class MyApp(QWidget):
         dialog.exec_()
 
 
-
     # последовательность Фибоначчи
     def fibonacci_iterative(self, n):
         if n <= 0:
@@ -926,8 +1044,8 @@ class MyApp(QWidget):
             fib_sequence.append(fib_sequence[-1] + fib_sequence[-2])
         return fib_sequence
 
-    def generate_passwords_with_fibonacci(self, max_length=64):
-        count = self.spin_box.value()
+    def generate_passwords_with_fibonacci(self):
+        count = self.count_passwords.value()
         
         if count < 1:
             QMessageBox.information(self, "Уведомление", "Количество паролей должно быть не менее 1.")
@@ -972,7 +1090,7 @@ class MyApp(QWidget):
         return [a1 + i * d for i in range(n)]
 
     def generate_passwords_with_arithmetic_progression(self, max_length=64):
-        count = self.spin_box.value()
+        count = self.count_passwords.value()
 
         if count < 1:
             QMessageBox.information(self, "Уведомление", "Количество паролей должно быть не менее 1.")
@@ -1007,6 +1125,7 @@ class MyApp(QWidget):
             current_length += 1
             if current_length > max_length:
                 current_length = min_length
+
         with open('arithmetic_progression_passwords.txt', 'w') as file:
             file.write('Каждый новый пароль срез последовательности арифметической прогрессии, причем первый член равен {},'
                        'разность прогрессии равна {}:\n\n\n'.format(a1, d))
@@ -1022,7 +1141,7 @@ class MyApp(QWidget):
         return [a * r**i for i in range(n)]
 
     def generate_passwords_with_geometric_progression(self, max_length=64):
-        count = self.spin_box.value()
+        count = self.count_passwords.value()
 
         if count < 1:
             QMessageBox.information(self, "Уведомление", "Количество паролей должно быть не менее 1.")
@@ -1043,7 +1162,7 @@ class MyApp(QWidget):
             return
 
         # Вычисление геометрической последовательности
-        sequence = self.geometric_sequence(a, r, max_length)
+        sequence = self.geometric_sequence(a, r, count)
         sequence_string = ''.join(str(num) for num in sequence)
         passwords = []
         current_length = min_length
@@ -1084,7 +1203,7 @@ class MyApp(QWidget):
             QMessageBox.warning(self, 'Ошибка', 'Пожалуйста, введите допустимое числовое значение для константы.')
             return
         
-        count = self.spin_box.value()
+        count = self.count_passwords.value()
 
         if count < 1:
             QMessageBox.information(self, "Уведомление", "Количество паролей должно быть не менее 1.")
@@ -1120,11 +1239,14 @@ class MyApp(QWidget):
                 current_length = min_length
         
         # Записываем пароли в файл
-        with open('constant_addition_passwords.txt', 'w') as file:
-            file.write('Каждый новый пароль высчитывается из отношения сложения начального заданного значения и'
+        with open('constant_addition_passwords.txt', 'w', encoding='utf-8') as file:
+            file.write('Формула: start+i**const, где i - зависит от количества необходимых паролей и i∈[0,n], n - количество паролей.'
+                       'Каждый новый пароль высчитывается из отношения сложения начального заданного значения и'
                        'номера пароля, возведенного в степень введенного константного значения:\n')
             for idx, password in enumerate(passwords, start=1):
-                file.write(f'{idx};{password}\n')
+                password_str = str(password)
+                password_str = re.sub(r'e\+', '', password_str)
+                file.write('{};{}\n'.format(idx, password_str))
         
         
         QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
@@ -1142,7 +1264,7 @@ class MyApp(QWidget):
         return catalan[n]
 
     def generate_passwords_with_catalan_numbers(self, max_length=64):
-        count = self.spin_box.value()
+        count = self.count_passwords.value()
 
         if count < 1:
             QMessageBox.information(self, "Уведомление", "Количество паролей должно быть не менее 1.")
@@ -1177,7 +1299,7 @@ class MyApp(QWidget):
                     current_length = min_length
 
             # Записываем пароли в файл
-            with open('numbers_catalan_passwords.csv', 'w') as file:
+            with open('numbers_catalan_passwords.txt', 'w') as file:
                 file.write(f'Числа Каталана — последовательность, в которой n-ное число выражается формулой C(n) = (2n)!/ (n! (n+1)!).'
                             'Каждый новый пароль срез от этой последовательности.\n')
                 for idx, password in enumerate(passwords, start=1):
@@ -1194,6 +1316,8 @@ class MyApp(QWidget):
         # Отображение прогресс-бара и ожидание
         progress_dialog.exec_()
         QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
+        self.param_dialog.accept()
+
 
 
 if __name__ == '__main__':
