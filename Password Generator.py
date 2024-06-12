@@ -76,7 +76,7 @@ class MyApp(QWidget):
 
         self.generate_button_with_rec_relations = QPushButton('Сгенерировать пароли из рекуррентных соотношений')
         self.generate_button_with_rec_relations.clicked.connect(self.select_recurrent_relation)
-        label1 = QLabel('Выберите какие :')
+        label1 = QLabel('Выберите какие константы записать:')
         layout.addWidget(label1)
         layout.addWidget(self.generate_button_with_math_const)
         layout.addWidget(self.generate_button_with_physical_const)
@@ -92,17 +92,6 @@ class MyApp(QWidget):
         layout.addWidget(self.generate_button_with_cubic_sqrt)
         layout.addWidget(self.generate_button_with_rec_relations)
 
-        # self.generate_arithmetic_progression_button = QPushButton('Генерировать пароли')
-        # self.generate_arithmetic_progression_button.clicked.connect(self.generate_passwords_with_arithmetic_progression)
-
-        # self.generate_geometric_progression_button = QPushButton('Генерировать пароли')
-        # self.generate_geometric_progression_button.clicked.connect(self.generate_passwords_with_geometric_progression)
-
-    def process_generation(self):
-        self.password_generator.catalan_number()
-        
-        # Включение кнопки после завершения операции
-        self.generate_button.setEnabled(True)
 
     # Генерация паролей на основе вычисления квадратного корня
     def generate_passwords_with_square_sqrt(self):
@@ -130,8 +119,6 @@ class MyApp(QWidget):
                     result = pow(i, 1/3)
                     file.write(f'Кубический корень {i}: {result}\n')
             QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
-
-
 
 
     # Генерация паролей на основе математических констант
@@ -370,7 +357,6 @@ class MyApp(QWidget):
         df.to_csv('mathematics_const_passwords.csv', index=False, sep=';')
 
         QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')
-    
 
 
     # Генерация паролей на основе физических констант
@@ -524,6 +510,7 @@ class MyApp(QWidget):
         QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')
 
 
+    # Генерация паролей на основе химических констант
     def generate_passwords_with_chemical_const(self):
         # count = self.spin_box.value()
         
@@ -736,7 +723,8 @@ class MyApp(QWidget):
             self.setup_for_constant_parameters()
         elif relation == 'Числа Каталана':
             dialog.accept()
-            self.generate_passwords_with_catalan_numbers()
+            self.setup_catalan_number_parametres()
+
 
     def setup_arithmetic_progression_parameters(self):
         self.param_dialog = QDialog(self)
@@ -875,6 +863,32 @@ class MyApp(QWidget):
         self.param_dialog.setLayout(layout)
         self.param_dialog.exec_()
 
+
+    def setup_catalan_number_parametres(self):
+        self.param_dialog = QDialog(self)
+        self.param_dialog.setWindowTitle('Параметры для чисел Каталана')
+
+        layout = QVBoxLayout()
+
+        self.min_length_spinbox = QSpinBox(self.param_dialog)
+        self.min_length_spinbox.setRange(1, 999)
+        self.min_length_spinbox.setValue(1)
+
+        self.max_length_spinbox = QSpinBox(self.param_dialog)
+        self.max_length_spinbox.setRange(1, 999)
+        self.max_length_spinbox.setValue(1)
+
+        generate_button = QPushButton('Генерация паролей', self.param_dialog)
+        generate_button.clicked.connect(self.generate_passwords_with_catalan_numbers)
+
+        layout.addWidget(QLabel('Минимальная длина пароля:'))
+        layout.addWidget(self.min_length_spinbox)
+        layout.addWidget(QLabel('Максимальная длина пароля'))
+        layout.addWidget(self.max_length_spinbox)
+        layout.addWidget(generate_button)
+
+        self.param_dialog.setLayout(layout)
+        self.param_dialog.exec_()
 
 
     def select_recurrent_relation(self):
@@ -1057,9 +1071,10 @@ class MyApp(QWidget):
         QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
         self.param_dialog.accept()
   
-    # формула
+
+    # добавление константы
     def constant_addition_sequence(self, start, const, n):
-        return [start + i * const for i in range(n)]
+        return [start + i ** const for i in range(n)]
 
     def generate_passwords_with_constant_addition(self, constant_value, dialog):
         dialog.accept()
@@ -1111,10 +1126,8 @@ class MyApp(QWidget):
             for idx, password in enumerate(passwords, start=1):
                 file.write(f'{idx};{password}\n')
         
-        QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
-
         
-
+        QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны.')
 
 
     # числа Каталана
@@ -1131,48 +1144,46 @@ class MyApp(QWidget):
     def generate_passwords_with_catalan_numbers(self, max_length=64):
         count = self.spin_box.value()
 
-        # Создание и настройка прогресс-бара
+        if count < 1:
+            QMessageBox.information(self, "Уведомление", "Количество паролей должно быть не менее 1.")
+            return
+
         progress_dialog = QProgressDialog("Generating passwords...", None, 0, 0)
         progress_dialog.setWindowTitle('Please wait')
         progress_dialog.setWindowModality(2)  # Блокирует главное окно
 
-        # # Генерация последовательности чисел Каталана
-        # catalan_sequence = [self.catalan_number(i) for i in range(1, 500)]
-        
-        # # Преобразуем числа Каталана в строку и убираем точки
-        # catalan_string = ''.join(str(num) for num in catalan_sequence).replace('.', '')
-        
-        # # Генерация паролей, каждый длиной до max_length символов
-        # passwords = [catalan_string[i:i + max_length] for i in range(0, len(catalan_string), max_length)]
-
-        # passwords = passwords[:count]
-
-        
-        # # Записываем пароли в файл
-        # with open('numbers_catalan_passwords.txt', 'w') as file:
-        #     file.write(f'Числа Каталана — последовательность, в которой n-ное число выражается формулой C(n) = (2n)!/ (n! (n+1)!).'
-        #                'Каждый новый пароль - это 64 символа от этой последовательности.\n')
-        #     for idx, password in enumerate(passwords, start=1):
-        #         file.write(f"Password with numbers catalan {idx}: {password}\n")
-                # Функция для генерации паролей в отдельном потоке
         def generate_passwords():
-            # Генерация последовательности чисел Каталана
+            min_length = self.min_length_spinbox.value()
+            max_length = self.max_length_spinbox.value()
+
+            if min_length > max_length:
+                QMessageBox.information(self, "Ошибка", "Минимальная длина не может быть больше максимальной длины.")
+                return
+
             catalan_sequence = [self.catalan_number(i) for i in range(1, 500)]
-
-            # Преобразуем числа Каталана в строку и убираем точки
             catalan_string = ''.join(str(num) for num in catalan_sequence).replace('.', '')
+            passwords = []
+            current_length = min_length
+            i = 0
 
-            # Генерация паролей, каждый длиной до max_length символов
-            passwords = [catalan_string[i:i + max_length] for i in range(0, len(catalan_string), max_length)]
-            passwords = passwords[:count]
+            while len(passwords) < count:
+                if i + current_length > len(catalan_string):
+                    break
+                password = catalan_string[i:i + current_length]
+                passwords.append(password)
+                i += current_length
+                current_length += 1
+                if current_length > max_length:
+                    current_length = min_length
 
             # Записываем пароли в файл
-            with open('numbers_catalan_passwords.txt', 'w') as file:
+            with open('numbers_catalan_passwords.csv', 'w') as file:
                 file.write(f'Числа Каталана — последовательность, в которой n-ное число выражается формулой C(n) = (2n)!/ (n! (n+1)!).'
-                           'Каждый новый пароль - это 64 символа от этой последовательности.\n')
+                            'Каждый новый пароль срез от этой последовательности.\n')
                 for idx, password in enumerate(passwords, start=1):
-                    file.write(f"Password with numbers catalan {idx}: {password}\n")
-                # Создание и настройка таймера ожидания
+                    file.write(f"{idx};{password}\n")
+            
+            # Создание и настройка таймера ожидания
             # Закрываем окно ожидания после завершения операции
             progress_dialog.close()
         timer = QTimer()
@@ -1190,9 +1201,3 @@ if __name__ == '__main__':
     ex = MyApp()
     ex.show()
     sys.exit(app.exec_())
-
-
-'''
-длина 
-
-'''
