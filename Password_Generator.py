@@ -45,6 +45,10 @@ class MyApp(QWidget):
                 border-radius: 10px;
                 padding: 15px;
             }
+            QPushButton:hover {
+                background-color: grey;
+                color: white; 
+            }
         """)
 
         self.setLayout(layout)
@@ -163,21 +167,27 @@ class MyApp(QWidget):
 
         layout = QHBoxLayout()
 
+        self.length_passwords = QSpinBox(self.param_dialog)
+        self.length_passwords.setRange(1,64)
+        self.length_passwords.setValue(16)
+
         self.min_value_spinbox = QSpinBox(self.param_dialog)
         self.min_value_spinbox.setRange(1, 9999)
         self.min_value_spinbox.setValue(1)
 
         self.max_value_spinbox = QSpinBox(self.param_dialog)
-        self.max_value_spinbox.setRange(1, 999)
+        self.max_value_spinbox.setRange(1, 9999)
         self.max_value_spinbox.setValue(1)
 
         generate_button = QPushButton('Генерировать пароли', self.param_dialog)
         generate_button.clicked.connect(self.generate_passwords_with_square_rt)
 
-        layout.addWidget(QLabel('Минимальная длина пароля:'))
+        layout.addWidget(QLabel('Минимальное значение пароля:'))
         layout.addWidget(self.min_value_spinbox)
-        layout.addWidget(QLabel('Максимальная длина пароля:'))
+        layout.addWidget(QLabel('Максимальное значение пароля:'))
         layout.addWidget(self.max_value_spinbox)
+        layout.addWidget(QLabel('Длина пароля'))
+        layout.addWidget(self.length_passwords)
         layout.addWidget(generate_button)
 
         self.param_dialog.setLayout(layout)
@@ -188,6 +198,10 @@ class MyApp(QWidget):
         self.param_dialog.setWindowTitle('Параметры паролей кубического корня')
 
         layout = QHBoxLayout()
+
+        self.length_passwords = QSpinBox(self.param_dialog)
+        self.length_passwords.setRange(1,64)
+        self.length_passwords.setValue(16)
 
         self.min_value_spinbox = QSpinBox(self.param_dialog)
         self.min_value_spinbox.setRange(1, 9999)
@@ -204,6 +218,8 @@ class MyApp(QWidget):
         layout.addWidget(self.min_value_spinbox)
         layout.addWidget(QLabel('Максимальная длина пароля:'))
         layout.addWidget(self.max_value_spinbox)
+        layout.addWidget(QLabel('Длина пароля'))
+        layout.addWidget(self.length_passwords)
         layout.addWidget(generate_button)
 
         self.param_dialog.setLayout(layout)
@@ -444,7 +460,7 @@ class MyApp(QWidget):
         df = pd.DataFrame(list(mathematics_constants_dict.items()), columns=['Название константы', 'Значение'])
         df.to_csv('mathematics_const_passwords.csv', index=False, sep=';')
 
-        QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')
+        QMessageBox.information(self, 'Уведомление', 'Константы успешно записаны в csv файл!')
 
 
     # Генерация паролей на основе физических констант
@@ -595,7 +611,7 @@ class MyApp(QWidget):
         df = pd.DataFrame(list(physical_constants_dict.items()), columns=['Название константы', 'Значение'])
         df.to_csv('physical_const_passwords.csv', index=False, sep=';')
 
-        QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')
+        QMessageBox.information(self, 'Уведомление', 'Константы успешно записаны в csv файл!')
 
 
     # Генерация паролей на основе химических констант
@@ -768,7 +784,7 @@ class MyApp(QWidget):
         df = pd.DataFrame(list(chemical_constants_dict.items()), columns=['Название константы', 'Значение'])
         df.to_csv('chemical_const_passwords.csv', index=False, sep=';')
 
-        QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')        
+        QMessageBox.information(self, 'Уведомление', 'Константы успешно записаны в csv файл!')        
 
 
     # Таблица Брадиса
@@ -792,7 +808,7 @@ class MyApp(QWidget):
             for angle, values in bradis_table.items():
                 writer.writerow([angle, values['sin'], values['cos'], values['tan'], values['cot']])
 
-        QMessageBox.information(self, 'Уведомление', 'Пароли успешно записаны в csv файл.')
+        QMessageBox.information(self, 'Уведомление', 'Константы успешно записаны в csv файл!')
 
     
     def generate_passwords_with_recurrent_relation(self, relation, dialog):
